@@ -70,12 +70,33 @@ impl Ball {
         // It's not a bug, it's a feature!
     }
     
-    pub fn bounce_paddle(&mut self, paddle_pos: Vec2) {
-        unimplemented!("todo impl ball.bounce_paddle()");
+
+
+    pub fn bounce_paddle(&mut self, paddle_pos: Vec2, part_sys: &mut ParticleSystem) {
+        self.dir *= Vec2::new(-1., 1.); // flip x component
+
+        //Depending on height difference, change direction vector
+        let speed_before_hit: f32 = Vec2::length(self.dir);
+        self.dir += (self.pos - paddle_pos) / 4.; // angle of approach changes angle of bounce
+        self.dir = Vec2::normalize(self.dir) * speed_before_hit * 1.1;	// fix speed, add 10%;
+
+        play_sound_once(&self.pong_sfx);
+        // pongsfx.Play();
+        part_sys.sparkle(self.pos, 2., 0.8, 40);
     }
 
-    pub fn update(&mut self) {
-        unimplemented!("todo impl ball.update()");
+    pub fn update(&mut self, part_sys: &mut ParticleSystem) {
+        // Conditional gravity makes nice sinusoidal patterns in the particles leaving the ball,
+        //   and adds a degree of difficulty to the game (and somewhat compensates for perfect AI).
+        if (self.pos.y > window::screen_height()){
+            self.dir -= Vec2::new(0., 0.1);
+        }else{
+            self.dir += Vec2::new(0., 0.);
+        }
+        // Ball leaves a trail of happiness
+        part_sys.sparkle(self.pos, 0.3, 0.98, 2);
+        
+        self.pos += self.dir;			// move ball
     }
 
     pub fn draw(&self) {

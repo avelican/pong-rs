@@ -132,12 +132,15 @@ impl Paddle {
         self.pos = Vec2::new(horizontal_position, window::screen_height() / 2.0);
     }
 
-    pub fn lose_life(&mut self, game_world: &mut GameWorld) {
+    pub fn lose_life(&mut self) -> bool{
         self.lives -= 1;
-        if self.lives == 0 {
-            game_world.end_game(self.left);
-        }
+
+        // rust doesn't like this!
+        // if self.lives == 0 {
+        //     game_world.end_game(self.left);
+        // }
         play_sound_once(&self.hit_sound);
+        self.lives == 0 // return "died" status
     }
 
     // Getters

@@ -57,7 +57,7 @@ pub struct GameWorld {
 
 impl GameWorld {
 
-    async fn new() -> Self {
+    pub async fn new() -> Self {
 
         // game_state = 0;
         let lives = 3;
@@ -66,10 +66,10 @@ impl GameWorld {
         // I'd rather make an Assets / AssetLoader class and just do everything there...
 
         let heart = load_texture("heart.png").await.unwrap(); // ball
-        let bg = load_texture("star-bg").await.unwrap(); // fancy parallax bg
+        let bg = load_texture("star-bg.png").await.unwrap(); // fancy parallax bg
         // let spritefont = Content.Load<SpriteFont>("SpriteFont1");
         let oh_yeah = load_sound("oh-yeah.wav").await.unwrap(); // disturbing easter egg
-        let song = load_sound("pong_soundtrack").await.unwrap();
+        let song = load_sound("pong_soundtrack.mp3").await.unwrap();
 
         let font = load_ttf_font("consolas.ttf").await.unwrap();
 
@@ -122,7 +122,7 @@ impl GameWorld {
         
     }
 
-     fn handle_input(&mut self) {
+    pub fn handle_input(&mut self) {
 
         // TODO: make game_state an enum
         // TODO: if -> match
@@ -173,9 +173,9 @@ impl GameWorld {
         }
     }
 
-     fn update(&mut self) {
+    pub fn update(&mut self) {
         if self.game_state == 1 {
-            self.ball.update();
+            self.ball.update(&mut self.part_sys);
             self.left_pad.update();
             self.right_pad.update();
             self.part_sys.update();
@@ -190,7 +190,7 @@ impl GameWorld {
     }
 
 
-     fn draw(&self) {
+    pub fn draw(&self) {
 
         clear_background(self.bg_color);
 
@@ -260,20 +260,26 @@ impl GameWorld {
         }
 
         if Collision::collide_ball_paddle(&self.ball, &self.left_pad) {
-            self.ball.bounce_paddle(self.left_pad.pos);
+            self.ball.bounce_paddle(self.left_pad.pos, &mut self.part_sys);
         }
 
         if Collision::collide_ball_paddle(&self.ball, &self.right_pad) {
-            self.ball.bounce_paddle(self.right_pad.pos);
+            self.ball.bounce_paddle(self.right_pad.pos, &mut self.part_sys);
         }
 
         if Collision::collide_ball_left_goal(&self.ball) {
-            self.left_pad.lose_life(self);
+            let died = self.left_pad.lose_life();
+            if died {
+                self.end_game(true);
+            }
             self.ball.reset();
         }
 
         if Collision::collide_ball_right_goal(&self.ball) {
-            self.right_pad.lose_life(self);
+            let died = self.right_pad.lose_life();
+            if died {
+                self.end_game(false);
+            }
             self.ball.reset();
         }
 
